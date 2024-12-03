@@ -12,7 +12,7 @@ template RsaVerifyPkcs1v15(CHUNK_SIZE, CHUNK_NUMBER, EXP, HASH_TYPE) {
 
     // signature ** exp mod modulus
     component pm = PowerModAnyExp(CHUNK_SIZE, CHUNK_NUMBER, EXP);
-    for (var i  = 0; i < CHUNK_NUMBER; i++) {
+    for (var i = 0; i < CHUNK_NUMBER; i++) {
         pm.base[i] <== signature[i];
         pm.modulus[i] <== pubkey[i];
     }

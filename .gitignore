@@ -45,3 +45,4 @@ test/circuits/*
 circuits/scripts/*
 tests/tests/circuits/identityManagement/*
 tests/tests/circuits/passportVerification/*
+circuits/ecdsa/brainpoolP384r1/*

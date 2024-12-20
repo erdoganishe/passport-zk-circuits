@@ -9,6 +9,19 @@ from padding import *
 from hasher import *
 from utils import *
 
+def get_country_code(passport_file):
+    with open(passport_file, 'r') as f:
+        passport_data = json.load(f)
+
+    country_code = passport_data.get('issuingAuthority', '')
+    if country_code:
+        return country_code
+    else:
+        return "HUI"
+    
+def get_dg_num(ec_hex, hash_algo):
+    return (len(ec_hex) - 58) // (hash_algo // 4 + 7)
+
 def get_new_sig_type(sig_type, salt, e_bits):
     if sig_type == 8:
         sig_type = 3
@@ -507,6 +520,54 @@ def process_passport(file_path):
     write_results_to_passport_verification(sig_algo, dg_hash_algo, dg1_shift, dg15_shift, ec_shift, dg15_blocks, ec_blocks, isdg15, AA_shift, real_circuit_name)
 
     write_to_json(dg1_res, dg15_res, sa_res, ec_res, pubkey_arr, signature_arr, sk_iden, root, branches, real_circuit_name)
+
+    csv_str = ""
+    csv_str += get_country_code(file_path) + ", "
+    csv_str += str(get_dg_num(ec_hex, dg_hash_algo)) + ", "
+    csv_str += str(dg_hash_algo) + ", "
+    csv_str += str(dg1_shift) + ", "
+    csv_str += str(hash_algo) + ", "
+    csv_str += str(ec_shift) + ", "
+    csv_str += str(len(ec_hex) * 4) + ", "
+
+    if sig_algo == 4:
+        csv_str += str(160) + ", "
+    else:
+        csv_str += str(hash_algo) + ", "
+    csv_str += str(len(sa_hex) * 4) + ", "
+    if (sig_algo == 1):
+        csv_str += "Rsa2048WithSha256"
+    if (sig_algo == 2):
+        csv_str += "Rsa4096WithSha256"
+    if (sig_algo == 3):
+        csv_str += "Rsa2048WithSha1"
+    if (sig_algo == 4):
+        csv_str += "Rsa3072WithSha1 e = 37187"
+    if (sig_algo == 10):
+        csv_str += "RsaPss2048WithSha256 e = 3 salt = 32"
+    if (sig_algo == 11):
+        csv_str += "RsaPss2048WithSha256 salt = 32"
+    if (sig_algo == 12):
+        csv_str += "RsaPss2048WithSha256 salt = 64"
+    if (sig_algo == 13):
+        csv_str += "RsaPss2048WithSha384 salt = 48"
+    if (sig_algo == 14):
+        csv_str += "RsaPss3072WithSha256 salt = 32"
+    if (sig_algo == 20):
+        csv_str += "ECDSA with secp256r1"
+    if (sig_algo == 21):
+        csv_str += "ECDSA with BrainpoolP256r1"
+    if (sig_algo == 22):
+        csv_str += "ECDSA with BrainpoolP320r1"
+    if (sig_algo == 23):
+        csv_str += "ECDSA with secp192r1"
+    if (sig_algo == 24):
+        csv_str += "ECDSA with p224"
+    if (sig_algo == 25):
+        csv_str += "ECDSA with BrainpoolP384r1"
+
+    write_distinct_string_to_csv(csv_str)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Decode a base64 encoded passport file.')

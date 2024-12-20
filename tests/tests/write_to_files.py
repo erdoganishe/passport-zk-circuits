@@ -1,4 +1,26 @@
 import json
+import csv
+
+def write_distinct_string_to_csv(new_string, file_path = './tests/tests/inputs/data.csv'):
+    existing_strings = set()
+    try:
+        with open(file_path, mode='r', newline='', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if row:  
+                    existing_strings.add(row[0])  
+    except FileNotFoundError:
+        pass
+
+    if new_string in existing_strings:
+        print(f"'{new_string}' already exists in the CSV file.")
+    else:
+        with open(file_path, mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow([new_string])
+        print(f"'{new_string}' has been added to the CSV file.")
+
+
 
 
 def write_results_to_register_identity(sig_algo, dg_hash_algo, document_type, dg1shift, dg15shift, ec_shift, dg15_blocks, ec_blocks, isdg15, AA_shift, short_file_path):

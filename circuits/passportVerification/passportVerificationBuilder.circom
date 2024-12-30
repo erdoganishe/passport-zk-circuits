@@ -157,7 +157,7 @@ template PassportVerificationBuilder(SIGNATURE_TYPE,DG_HASH_TYPE,EC_BLOCK_NUMBER
     signatureVerification.pubkey <== pubkey;
     signatureVerification.hashed <== signedAttributesHash;
     
-    // Calculating passportHash = Poseidon(HASH_TYPE(signedAttributes)[252bit])
+    // Calculating passportHash = Poseidon(HASH_TYPE(signedAttributes)[first 252bit][::-1])
     
     component signedAttributesNum = Bits2Num(252);
     if (HASH_TYPE >= 252){

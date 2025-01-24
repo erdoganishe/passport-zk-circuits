@@ -46,3 +46,4 @@ circuits/scripts/*
 tests/tests/circuits/identityManagement/*
 tests/tests/circuits/passportVerification/*
 circuits/ecdsa/brainpoolP384r1/*
+*tmp.*

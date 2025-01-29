@@ -107,19 +107,19 @@ def get_sa(sod_hex, sa_locations, chunk_size):
 
     _, sa_padded, _ = process_and_pad_hex(sa, chunk_size)
     sa_res = format_bit_string(sa_padded)
-    print(sa)
+    # print(sa)
 
     return sa, sa_res
 
 def process_sa(asn1_data):
     lines = asn1_data.split('\n')
-    print(asn1_data)
+    # print(asn1_data)
     cont_lines = [line for line in lines if 'cont [ 0 ]' in line]
     sa_locations = []
     for line in cont_lines:
         filtered_list = [s for s in line.split("l=")[2].split(" ") if s]
         sa_locations.append([int(line.split(":")[0]), int(filtered_list[0]) + 2])
-    print(sa_locations)
+    # print(sa_locations)
     return sa_locations
 
 def process_pubkey(asn1_data):
@@ -202,16 +202,18 @@ def get_ans1_data(file_path):
     return sod_hex
 
 def get_dg_chunk_size(ec_hex):
-    print(ec_hex)
-    print(ec_hex.split("0201"))
+    # print(ec_hex)
+    # print(ec_hex.split("0201"))
     lenght = (len(ec_hex.split("0201")[3]) - 10) * 4
-    print(lenght, "LEN")
+    # print(lenght, "LEN")
     if lenght == 256:
         return 256, 512
     if lenght == 160:
         return 160, 512
     if lenght == 384:
         return 384, 1024
+    if lenght == 512:
+        return 512, 1024
     return 0, 0
 
 def get_aa_sig_algo(dg15_hex):
@@ -304,7 +306,7 @@ def get_rsa_3072_rsa_pss_params(sod_hex, rsa_pubkey_location, rsa_pubkey_len, si
     chunk_num = 48
     pubkey = sod_hex[rsa_pubkey_location * 2 -1: rsa_pubkey_location *2 + rsa_pubkey_len*2 + 2].split("82018100")[1][0:768]
     pubkey_arr = bigint_to_array(64, chunk_num, int(pubkey, 16))
-    print(sod_hex[rsa_pubkey_location *2 + rsa_pubkey_len*2 + 2: rsa_pubkey_location *2 + rsa_pubkey_len*2 + 8])
+    # print(sod_hex[rsa_pubkey_location *2 + rsa_pubkey_len*2 + 2: rsa_pubkey_location *2 + rsa_pubkey_len*2 + 8])
     if (sod_hex[rsa_pubkey_location *2 + rsa_pubkey_len*2 + 2: rsa_pubkey_location *2 + rsa_pubkey_len*2 + 8] == "009143"):
         e_bits = 37187
     else:
@@ -340,12 +342,14 @@ def get_shifts(dg15_hex, ec_hex, dg_hash_algo, hash_algo, sa_hex):
     if dg_hash_algo == 160:
         dg15_hash = sha1_hash_from_hex(dg15_hex)
 
-    
     if dg_hash_algo == 256:
         dg15_hash = sha256_hash_from_hex(dg15_hex)
     
     if dg_hash_algo == 384:
         dg15_hash = sha384_hash_from_hex(dg15_hex)
+
+    if dg_hash_algo == 512:
+        dg15_hash = sha512_hash_from_hex(dg15_hex)
 
     ec_hash = sha256_hash_from_hex(ec_hex)
     if hash_algo == 160:
@@ -354,6 +358,8 @@ def get_shifts(dg15_hex, ec_hex, dg_hash_algo, hash_algo, sa_hex):
         ec_hash = sha256_hash_from_hex(ec_hex)
     if hash_algo == 384:
         ec_hash = sha384_hash_from_hex(ec_hex)
+    if hash_algo == 512:
+        ec_hash = sha512_hash_from_hex(ec_hex)
 
     
     if dg15_hex != "01":
@@ -361,6 +367,9 @@ def get_shifts(dg15_hex, ec_hex, dg_hash_algo, hash_algo, sa_hex):
 
     ec_shift = len(str.upper(sa_hex).split(str.upper(ec_hash))[0])*4
     dg1_shift = (len(ec_hex.split("020101")[0]) + 10) * 4
+    # if nist algo present
+    if dg1_shift <= 72 and hash_algo == 512:
+        dg1_shift = (len(ec_hex.split("020101")[1]) + len(ec_hex.split("020101")[0]) + 16) * 4
 
     return dg1_shift, dg15_shift, ec_shift  
 
@@ -413,7 +422,6 @@ def process_passport(file_path):
     
 
     signature = process_sign(asn1_data)
-
     salt = process_salt(asn1_data)
 
     sig_algo = get_sig_algo(sod_hex, salt, signature, hash_algo)
@@ -423,8 +431,8 @@ def process_passport(file_path):
     signature_arr = []
     chunk_number = 0
     e_bits = 0
-    print(sig_algo)
-    print(dg_hash_algo, dg_chunk_size)
+    # print(sig_algo)
+    # print(dg_hash_algo, dg_chunk_size)
 
     dg15_blocks = padd_dg15(dg15_hex, dg_chunk_size)
 
@@ -445,7 +453,8 @@ def process_passport(file_path):
 
     if sig_algo == 1 or sig_algo == 3 or sig_algo == 5 or sig_algo == 8:
         pubkey_arr, signature_arr, chunk_number, e_bits, pk_hash = get_rsa_2048_rsa_pss_params(sod_hex, rsa_pubkey_location, rsa_pubkey_len, signature)
-   
+    if sig_algo == 5 and hash_algo == 512:
+        sig_algo = 15
     dg1_shift, dg15_shift, ec_shift = get_shifts(dg15_hex, ec_hex, dg_hash_algo, hash_algo, sa_hex)
 
     root, branches = get_root_and_branches(pk_hash)

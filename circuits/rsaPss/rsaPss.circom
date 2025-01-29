@@ -50,8 +50,6 @@ template VerifyRsaSig(CHUNK_SIZE, CHUNK_NUMBER, SALT_LEN, EXP, HASH_TYPE){
         eM[EM_LEN - i - 1] <== bits2Num[i].out;
     }
 
-
-    
     //should be more than HLEN + SLEN + 2
     assert(EM_LEN >= HASH_LEN + SALT_LEN + 2);
 

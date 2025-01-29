@@ -180,3 +180,12 @@ def sha1_hash_from_hex(hex_str):
     sha1_hash = hashlib.sha1(byte_data).hexdigest()
     
     return sha1_hash
+
+def sha512_hash_from_hex(hex_str):
+    # Step 1: Convert hex string to bytes
+    byte_data = bytes.fromhex(hex_str)
+    
+    # Step 2: Compute SHA-256 hash
+    sha384_hash = hashlib.sha512(byte_data).hexdigest()
+    
+    return sha384_hash
